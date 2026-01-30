@@ -1,235 +1,29 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>ZooGrand Shop</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import CommandStart
+import asyncio
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-    }
+TOKEN="ТОКЕН_ОТ_BOTFATHER"
 
-    header {
-      background: #16a34a;
-      padding: 16px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
+bot=Bot(TOKEN)
+dp=Dispatcher()
 
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      background: #022c22;
-    }
+@dp.message(CommandStart())
+async def start(msg:types.Message):
+    kb=types.ReplyKeyboardMarkup(
+        keyboard=[[types.KeyboardButton(
+            text="🐾 Открыть ZooGrand",
+            web_app=types.WebAppInfo(url="ССЫЛКА_НА_INDEX.HTML")
+        )]],
+        resize_keyboard=True
+    )
+    await msg.answer("Добро пожаловать в ZooGrand!",reply_markup=kb)
 
-    .tab {
-      padding: 12px;
-      cursor: pointer;
-      flex: 1;
-      text-align: center;
-    }
+@dp.message()
+async def data(msg:types.Message):
+    if msg.web_app_data:
+        await msg.answer(f"📩 Новая заявка:\n{msg.web_app_data.data}")
 
-    .tab.active {
-      background: #16a34a;
-    }
+async def main():
+    await dp.start_polling(bot)
 
-    .screen {
-      display: none;
-      padding: 16px;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    .product {
-      background: #020617;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      padding: 12px;
-    }
-
-    .product img {
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    .product h3 {
-      margin: 8px 0 4px;
-    }
-
-    .price {
-      color: #22c55e;
-      font-weight: bold;
-    }
-
-    .qty {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    button {
-      background: #16a34a;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .cart-item {
-      border-bottom: 1px solid #334155;
-      padding: 8px 0;
-    }
-
-    .checkout {
-      margin-top: 20px;
-      width: 100%;
-      font-size: 18px;
-      padding: 14px;
-    }
-  </style>
-</head>
-
-<body>
-<header>🐾 ZooGrand — Магазин</header>
-
-<div class="tabs">
-  <div class="tab active" onclick="showScreen('beds')">🛏 Лежанки</div>
-  <div class="tab" onclick="showScreen('treats')">🍖 Вкусняшки</div>
-  <div class="tab" onclick="showScreen('cart')">🛒 Корзина</div>
-</div>
-
-<!-- ЛЕЖАНКИ -->
-<div id="beds" class="screen active"></div>
-
-<!-- ВКУСНЯШКИ -->
-<div id="treats" class="screen"></div>
-
-<!-- КОРЗИНА -->
-<div id="cart" class="screen">
-  <h2>🛒 Ваша корзина</h2>
-  <div id="cartItems"></div>
-  <button class="checkout" onclick="sendOrder()">📩 Отправить заявку</button>
-</div>
-
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-const products = [
-  {
-    id: 1,
-    category: "beds",
-    name: "Лежанка «Комфорт»",
-    price: 1500,
-    img: "https://images.unsplash.com/photo-1619983081593-e2ba5b543168"
-  },
-  {
-    id: 2,
-    category: "beds",
-    name: "Лежанка «Премиум»",
-    price: 3000,
-    img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e"
-  },
-  {
-    id: 3,
-    category: "treats",
-    name: "Мясные палочки",
-    price: 250,
-    img: "https://images.unsplash.com/photo-1621976498727-c8ee1b8a9a1b"
-  },
-  {
-    id: 4,
-    category: "treats",
-    name: "Сушёное лёгкое",
-    price: 400,
-    img: "https://images.unsplash.com/photo-1601758123927-196e3c1fbe6f"
-  }
-];
-
-let cart = {};
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-  document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
-
-  if (id === 'cart') renderCart();
-}
-
-function renderProducts() {
-  products.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'product';
-    div.innerHTML = `
-      <img src="${p.img}">
-      <h3>${p.name}</h3>
-      <div class="price">${p.price} ₽</div>
-      <div class="qty">
-        <button onclick="add(${p.id})">➕</button>
-        <span>${cart[p.id] || 0}</span>
-        <button onclick="remove(${p.id})">➖</button>
-      </div>
-    `;
-    document.getElementById(p.category).appendChild(div);
-  });
-}
-
-function add(id) {
-  cart[id] = (cart[id] || 0) + 1;
-  refresh();
-}
-
-function remove(id) {
-  if (cart[id]) cart[id]--;
-  refresh();
-}
-
-function refresh() {
-  document.getElementById('beds').innerHTML = '';
-  document.getElementById('treats').innerHTML = '';
-  renderProducts();
-}
-
-function renderCart() {
-  const box = document.getElementById('cartItems');
-  box.innerHTML = '';
-  for (let id in cart) {
-    if (cart[id] > 0) {
-      const p = products.find(x => x.id == id);
-      box.innerHTML += `
-        <div class="cart-item">
-          ${p.name} × ${cart[id]} = ${p.price * cart[id]} ₽
-        </div>`;
-    }
-  }
-}
-
-function sendOrder() {
-  let text = "🐾 Заявка ZooGrand\n\n";
-  for (let id in cart) {
-    if (cart[id] > 0) {
-      const p = products.find(x => x.id == id);
-      text += `${p.name} × ${cart[id]}\n`;
-    }
-  }
-  tg.sendData(text);
-  tg.close();
-}
-
-renderProducts();
-</script>
-</body>
-</html>
+asyncio.run(main())
