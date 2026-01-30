@@ -1,29 +1,172 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
-import asyncio
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>ZooGrand</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-TOKEN="ТОКЕН_ОТ_BOTFATHER"
+<style>
+:root{
+  --bg:#F6F7F9;
+  --card:#FFFFFF;
+  --primary:#FF7A00;
+  --muted:#8E8E93;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;
+}
+#app{padding:16px}
+button{
+  width:100%;
+  padding:16px;
+  margin-top:12px;
+  font-size:17px;
+  border:none;
+  border-radius:18px;
+  background:var(--primary);
+  color:#fff;
+  transition:transform .15s ease;
+}
+button:active{transform:scale(.96)}
+.card{
+  background:var(--card);
+  border-radius:24px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  animation:pop .35s ease;
+}
+.card img{
+  width:100%;
+  border-radius:18px;
+  margin-bottom:12px;
+}
+.muted{color:var(--muted)}
+input[type=date]{
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid #E5E5EA;
+  margin-bottom:10px;
+  font-size:16px;
+}
+@keyframes pop{
+  from{transform:scale(.96);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+</style>
+</head>
 
-bot=Bot(TOKEN)
-dp=Dispatcher()
+<body>
+<div id="app">
+  <div id="content"></div>
+</div>
 
-@dp.message(CommandStart())
-async def start(msg:types.Message):
-    kb=types.ReplyKeyboardMarkup(
-        keyboard=[[types.KeyboardButton(
-            text="🐾 Открыть ZooGrand",
-            web_app=types.WebAppInfo(url="ССЫЛКА_НА_INDEX.HTML")
-        )]],
-        resize_keyboard=True
-    )
-    await msg.answer("Добро пожаловать в ZooGrand!",reply_markup=kb)
+<script>
+Telegram.WebApp.expand();
 
-@dp.message()
-async def data(msg:types.Message):
-    if msg.web_app_data:
-        await msg.answer(f"📩 Новая заявка:\n{msg.web_app_data.data}")
+const content=document.getElementById("content");
 
-async def main():
-    await dp.start_polling(bot)
+const catalog=[
+ {id:"mini",title:"Мини / Той",weight:"до 5 кг",price:400,img:"https://images.unsplash.com/photo-1558788353-f76d92427f16"},
+ {id:"small",title:"Маленькие",weight:"5–10 кг",price:600,img:"https://images.unsplash.com/photo-1601758123927-196d4c7d6c1d"},
+ {id:"medium",title:"Средние",weight:"10–28 кг",price:900,img:"https://images.unsplash.com/photo-1548199973-03cce0bbc87b"},
+ {id:"large",title:"Крупные",weight:"28+ кг",price:1300,img:"https://images.unsplash.com/photo-1517849845537-4d257902454a"}
+];
 
-asyncio.run(main())
+let booking={};
+
+function home(){
+  content.innerHTML=`
+  <div class="card">
+    <h1>ZooGrand 🐾</h1>
+    <p class="muted">Передержка и забота без стресса</p>
+    <button onclick="openCatalog()">Каталог</button>
+    <button onclick="startQuiz()">Подобрать услугу</button>
+  </div>`;
+}
+home();
+
+function openCatalog(){
+  let html="";
+  catalog.forEach(i=>{
+    html+=`
+    <div class="card">
+      <img src="${i.img}">
+      <h3>${i.title}</h3>
+      <p>${i.weight}</p>
+      <b>от ${i.price} ₽ / сутки</b>
+      <button onclick="openCalc('${i.title}',${i.price})">
+        Рассчитать стоимость
+      </button>
+    </div>`;
+  });
+  content.innerHTML=html;
+}
+
+function openCalc(title,price){
+  booking={title,price};
+  content.innerHTML=`
+  <div class="card">
+    <h2>${title}</h2>
+    <label>Заезд</label>
+    <input type="date" onchange="booking.start=this.value;calc()">
+    <label>Выезд</label>
+    <input type="date" onchange="booking.end=this.value;calc()">
+    <div id="result" class="muted">Выберите даты</div>
+    <button id="sendBtn" disabled onclick="send()">Отправить заявку</button>
+  </div>`;
+}
+
+function calc(){
+  if(!booking.start||!booking.end)return;
+  const s=new Date(booking.start);
+  const e=new Date(booking.end);
+  const days=Math.ceil((e-s)/(1000*60*60*24));
+  if(days<=0)return;
+  booking.days=days;
+  booking.total=days*booking.price;
+  document.getElementById("result").innerHTML=
+  `📆 ${days} суток<br>💰 <b>${booking.total} ₽</b>`;
+  document.getElementById("sendBtn").disabled=false;
+  Telegram.WebApp.HapticFeedback.impactOccurred("light");
+}
+
+function send(){
+  Telegram.WebApp.sendData(JSON.stringify(booking));
+}
+
+/* КВИЗ */
+const quiz=[
+ {q:"Размер питомца?",a:["До 5 кг","5–10 кг","10–28 кг","28+ кг"]},
+ {q:"Когда нужна передержка?",a:["Срочно","Планирую заранее"]}
+];
+let qi=0,ans=[];
+
+function startQuiz(){qi=0;ans=[];showQ();}
+function showQ(){
+  let h=`<div class="card"><h3>${quiz[qi].q}</h3>`;
+  quiz[qi].a.forEach(x=>{
+    h+=`<button onclick="qa('${x}')">${x}</button>`;
+  });
+  h+="</div>";
+  content.innerHTML=h;
+}
+function qa(v){
+  ans.push(v);qi++;
+  if(qi<quiz.length)showQ();
+  else content.innerHTML=`
+  <div class="card">
+    <h2>🎯 Отлично!</h2>
+    <p>Подберём лучший вариант под вас</p>
+    <button onclick="Telegram.WebApp.sendData(JSON.stringify({quiz:ans}))">
+      Оставить заявку
+    </button>
+  </div>`;
+}
+</script>
+</body>
+</html>
