@@ -1,176 +1,235 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>ZooGrand73 🐾</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <title>ZooGrand Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<style>
-:root{
-  --green:#1f7a63;
-  --bg:#f6f3ee;
-  --brown:#5a4634;
-  --accent:#f2c94c;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+    }
 
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:var(--bg);
-  color:var(--brown);
-}
+    header {
+      background: #16a34a;
+      padding: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
 
-.container{max-width:420px;margin:auto;padding:16px}
-.card{
-  background:#fff;
-  border-radius:20px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,.08);
-}
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background: #022c22;
+    }
 
-h1,h2{color:var(--green);margin:0 0 10px}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:16px;
-  background:var(--green);
-  color:#fff;
-  font-size:16px;
-  margin-top:8px;
-}
-.secondary{background:var(--accent);color:#000}
-.hidden{display:none}
-input{width:100%;padding:10px;border-radius:12px;border:1px solid #ccc;margin-top:6px}
-.option{margin-bottom:8px}
-</style>
+    .tab {
+      padding: 12px;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+    }
+
+    .tab.active {
+      background: #16a34a;
+    }
+
+    .screen {
+      display: none;
+      padding: 16px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .product {
+      background: #020617;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+    }
+
+    .product img {
+      width: 100%;
+      border-radius: 12px;
+    }
+
+    .product h3 {
+      margin: 8px 0 4px;
+    }
+
+    .price {
+      color: #22c55e;
+      font-weight: bold;
+    }
+
+    .qty {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    button {
+      background: #16a34a;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .cart-item {
+      border-bottom: 1px solid #334155;
+      padding: 8px 0;
+    }
+
+    .checkout {
+      margin-top: 20px;
+      width: 100%;
+      font-size: 18px;
+      padding: 14px;
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
+<header>🐾 ZooGrand — Магазин</header>
 
-<!-- HEADER -->
-<div class="card">
-<h1>🐾 ZooGrand73</h1>
-<p>Передержка • забота • вкусняшки</p>
+<div class="tabs">
+  <div class="tab active" onclick="showScreen('beds')">🛏 Лежанки</div>
+  <div class="tab" onclick="showScreen('treats')">🍖 Вкусняшки</div>
+  <div class="tab" onclick="showScreen('cart')">🛒 Корзина</div>
 </div>
 
-<!-- КВИЗ ПЕРЕДЕРЖКИ -->
-<div class="card" id="stayQuiz">
-<h2>🏡 Квиз передержки</h2>
+<!-- ЛЕЖАНКИ -->
+<div id="beds" class="screen active"></div>
 
-<p><b>Размер собаки</b></p>
-<button onclick="stay.size='До 5 кг'; stay.price=600; nextStay(1)">До 5 кг</button>
-<button onclick="stay.size='5–10 кг'; stay.price=900; nextStay(1)">5–10 кг</button>
-<button onclick="stay.size='10–25 кг'; stay.price=1200; nextStay(1)">10–25 кг</button>
-<button onclick="stay.size='25+ кг'; stay.price=1800; nextStay(1)">25+ кг</button>
-
-<div id="stayStep2" class="hidden">
-<p><b>Есть агрессия?</b></p>
-<button onclick="stay.aggression='Нет'; nextStay(2)">Нет</button>
-<button onclick="stay.aggression='Да'; nextStay(2)">Да</button>
-</div>
-
-<div id="stayStep3" class="hidden">
-<p><b>Даты</b></p>
-<label>Заезд</label>
-<input type="date" id="start">
-<label>Выезд</label>
-<input type="date" id="end">
-<button class="secondary" onclick="finishStay()">Добавить в корзину</button>
-</div>
-</div>
-
-<!-- КВИЗ ВКУСНЯШЕК -->
-<div class="card" id="foodQuiz">
-<h2>🍖 Квиз вкусняшек</h2>
-
-<p><b>Тип</b></p>
-<button onclick="food.type='Мясные'">🥩 Мясные</button>
-<button onclick="food.type='Сушёные'">🦴 Сушёные</button>
-
-<p><b>Упаковка</b></p>
-<button onclick="food.pack='200 г'; food.price=300">200 г — 300 ₽</button>
-<button onclick="food.pack='500 г'; food.price=500">500 г — 500 ₽</button>
-
-<p><b>Количество</b></p>
-<input type="number" min="1" value="1" id="foodQty">
-
-<button class="secondary" onclick="addFood()">Добавить в корзину</button>
-</div>
+<!-- ВКУСНЯШКИ -->
+<div id="treats" class="screen"></div>
 
 <!-- КОРЗИНА -->
-<div class="card hidden" id="cart">
-<h2>🧺 Корзина</h2>
-<p id="cartList"></p>
-<p><b id="total"></b></p>
-
-<button onclick="sendOrder()">📩 Отправить заявку</button>
-<button class="secondary" onclick="call()">📞 Позвонить</button>
-</div>
-
+<div id="cart" class="screen">
+  <h2>🛒 Ваша корзина</h2>
+  <div id="cartItems"></div>
+  <button class="checkout" onclick="sendOrder()">📩 Отправить заявку</button>
 </div>
 
 <script>
-const tg = Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 tg.expand();
 
-let cart = [];
-let sum = 0;
+const products = [
+  {
+    id: 1,
+    category: "beds",
+    name: "Лежанка «Комфорт»",
+    price: 1500,
+    img: "https://images.unsplash.com/photo-1619983081593-e2ba5b543168"
+  },
+  {
+    id: 2,
+    category: "beds",
+    name: "Лежанка «Премиум»",
+    price: 3000,
+    img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e"
+  },
+  {
+    id: 3,
+    category: "treats",
+    name: "Мясные палочки",
+    price: 250,
+    img: "https://images.unsplash.com/photo-1621976498727-c8ee1b8a9a1b"
+  },
+  {
+    id: 4,
+    category: "treats",
+    name: "Сушёное лёгкое",
+    price: 400,
+    img: "https://images.unsplash.com/photo-1601758123927-196e3c1fbe6f"
+  }
+];
 
-let stay = {};
-let food = {};
+let cart = {};
 
-function nextStay(step){
-  if(step===1) document.getElementById('stayStep2').classList.remove('hidden');
-  if(step===2) document.getElementById('stayStep3').classList.remove('hidden');
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+
+  if (id === 'cart') renderCart();
 }
 
-function finishStay(){
-  const s = new Date(start.value);
-  const e = new Date(end.value);
-  const days = (e-s)/(1000*60*60*24);
-  if(days<=0){alert("Неверные даты");return;}
-  const price = days*stay.price;
-  cart.push(`🏡 Передержка (${stay.size}, ${days} дн.) — ${price} ₽`);
-  sum += price;
-  showCart();
+function renderProducts() {
+  products.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.innerHTML = `
+      <img src="${p.img}">
+      <h3>${p.name}</h3>
+      <div class="price">${p.price} ₽</div>
+      <div class="qty">
+        <button onclick="add(${p.id})">➕</button>
+        <span>${cart[p.id] || 0}</span>
+        <button onclick="remove(${p.id})">➖</button>
+      </div>
+    `;
+    document.getElementById(p.category).appendChild(div);
+  });
 }
 
-function addFood(){
-  const q = +foodQty.value;
-  if(!food.type || !food.pack){alert("Выберите всё");return;}
-  const price = food.price*q;
-  cart.push(`🍖 ${food.type}, ${food.pack} × ${q} — ${price} ₽`);
-  sum += price;
-  showCart();
+function add(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  refresh();
 }
 
-function showCart(){
-  cartList.innerHTML = cart.join("<br>");
-  total.innerText = "Итого: "+sum+" ₽";
-  cart.classList.remove('hidden');
+function remove(id) {
+  if (cart[id]) cart[id]--;
+  refresh();
 }
 
-function sendOrder(){
-  const text =
-`🐾 Заявка ZooGrand73
+function refresh() {
+  document.getElementById('beds').innerHTML = '';
+  document.getElementById('treats').innerHTML = '';
+  renderProducts();
+}
 
-${cart.join("\n")}
+function renderCart() {
+  const box = document.getElementById('cartItems');
+  box.innerHTML = '';
+  for (let id in cart) {
+    if (cart[id] > 0) {
+      const p = products.find(x => x.id == id);
+      box.innerHTML += `
+        <div class="cart-item">
+          ${p.name} × ${cart[id]} = ${p.price * cart[id]} ₽
+        </div>`;
+    }
+  }
+}
 
-💰 Итого: ${sum} ₽
-
-📞 Клиент ждёт звонка`;
+function sendOrder() {
+  let text = "🐾 Заявка ZooGrand\n\n";
+  for (let id in cart) {
+    if (cart[id] > 0) {
+      const p = products.find(x => x.id == id);
+      text += `${p.name} × ${cart[id]}\n`;
+    }
+  }
   tg.sendData(text);
-  alert("✅ Заявка отправлена!");
+  tg.close();
 }
 
-function call(){
-  location.href="tel:+79991901089";
-}
+renderProducts();
 </script>
-
 </body>
 </html>
