@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>ZooGrand73 — передержка собак</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f6f6f6; margin:0; padding:16px }
-    .card { background:#fff; border-radius:16px; padding:16px; margin-bottom:16px }
-    h1,h2,h3 { margin-top:0 }
-    button {
-      width:100%; padding:14px; margin-top:10px;
-      border:none; border-radius:12px;
-      background:#2f80ed; color:#fff; font-size:16px;
-    }
-    .secondary { background:#27ae60 }
-    .price { font-weight:bold; margin-top:6px }
-    input { width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:6px }
-    .hidden { display:none }
-  </style>
+<meta charset="UTF-8">
+<title>ZooGrand73 — мини-магазин</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; padding:16px }
+.card { background:#fff; border-radius:16px; padding:16px; margin-bottom:16px }
+h1,h2 { margin:0 0 10px }
+button {
+  width:100%; padding:14px; margin-top:10px;
+  border:none; border-radius:12px;
+  background:#2f80ed; color:#fff; font-size:16px
+}
+.secondary { background:#27ae60 }
+input, select {
+  width:100%; padding:10px; margin-top:6px;
+  border-radius:10px; border:1px solid #ccc
+}
+.hidden { display:none }
+.price { font-weight:bold; font-size:18px; margin-top:10px }
+</style>
 </head>
+
 <body>
 
 <h1>🐾 ZooGrand73</h1>
@@ -27,94 +32,60 @@
 
 <!-- QUIZ -->
 <div class="card" id="quiz">
-  <h2>🧠 Подбор передержки за 30 секунд</h2>
+  <h2>🧠 Подбор услуги за 30 секунд</h2>
 
-  <p><b>1. Размер собаки</b></p>
-  <button onclick="setSize('Мини / Той',600)">До 5 кг</button>
-  <button onclick="setSize('Маленькие',900)">5–10 кг</button>
-  <button onclick="setSize('Средние',1200)">10–25 кг</button>
-  <button onclick="setSize('Крупные',1800)">25+ кг</button>
+  <p>Размер собаки</p>
+  <button onclick="setSize('Маленькая',800)">До 10 кг</button>
+  <button onclick="setSize('Средняя',1200)">10–25 кг</button>
+  <button onclick="setSize('Большая',1800)">25+ кг</button>
 
   <div id="step2" class="hidden">
-    <p><b>2. Есть ли агрессия?</b></p>
-    <button onclick="setAggression('Да')">Да</button>
+    <p>Есть ли агрессия?</p>
     <button onclick="setAggression('Нет')">Нет</button>
+    <button onclick="setAggression('Да')">Да</button>
   </div>
 
   <div id="step3" class="hidden">
-    <p><b>3. Даты передержки</b></p>
-    <label>Дата заезда</label>
+    <p>Даты передержки</p>
     <input type="date" id="start">
-    <label>Дата выезда</label>
     <input type="date" id="end">
-    <button class="secondary" onclick="finishQuiz()">Показать вариант ✅</button>
+    <input type="tel" id="phone" placeholder="Телефон">
+    <button class="secondary" onclick="finishQuiz()">Рассчитать 💰</button>
   </div>
 </div>
 
-<!-- RESULT / BOOKING -->
+<!-- RESULT -->
 <div class="card hidden" id="result">
-  <h2>🐶 Подходящий вариант</h2>
-  <p id="resText"></p>
-  <p class="price" id="resPrice"></p>
+  <h2>🐶 Ваш вариант</h2>
+  <p id="info"></p>
+  <p class="price" id="total"></p>
   <button onclick="sendOrder()">Забронировать 🐾</button>
 </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.expand();
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-  let order = {
-    service: '',
-    price: 0,
-    aggression: '',
-    start: '',
-    end: '',
-    days: 0,
-    total: 0
-  };
+let order = { size:'', price:0, aggression:'', start:'', end:'', days:0, total:0, phone:'' };
 
-  function setSize(service, price) {
-    order.service = service;
-    order.price = price;
-    document.getElementById('step2').classList.remove('hidden');
+function setSize(size, price){
+  order.size = size;
+  order.price = price;
+  document.getElementById('step2').classList.remove('hidden');
+}
+
+function setAggression(val){
+  order.aggression = val;
+  document.getElementById('step3').classList.remove('hidden');
+}
+
+function finishQuiz(){
+  order.start = start.value;
+  order.end = end.value;
+  order.phone = phone.value;
+
+  if(!order.start || !order.end || !order.phone){
+    alert('Заполните всё'); return;
   }
 
-  function setAggression(val) {
-    order.aggression = val;
-    document.getElementById('step3').classList.remove('hidden');
-  }
-
-  function finishQuiz() {
-    order.start = document.getElementById('start').value;
-    order.end = document.getElementById('end').value;
-    if (!order.start || !order.end) {
-      alert('Выберите даты'); return;
-    }
-    const d1 = new Date(order.start);
-    const d2 = new Date(order.end);
-    const diff = (d2 - d1) / (1000 * 60 * 60 * 24);
-    if (diff <= 0) { alert('Дата выезда должна быть позже'); return; }
-
-    order.days = diff;
-    order.total = diff * order.price;
-
-    document.getElementById('quiz').classList.add('hidden');
-    document.getElementById('result').classList.remove('hidden');
-
-    document.getElementById('resText').innerHTML = `
-      Услуга: <b>${order.service}</b><br>
-      Агрессия: ${order.aggression}<br>
-      Даты: ${order.start} → ${order.end}<br>
-      Дней: ${order.days}
-    `;
-    document.getElementById('resPrice').innerText = `Итого: ${order.total} ₽`;
-  }
-
-  function sendOrder() {
-    tg.sendData(JSON.stringify(order));
-    alert('✅ Заявка отправлена! Мы скоро свяжемся с вами');
-  }
-</script>
-
-</body>
-</html>
+  const d1 = new Date(order.start)
